@@ -20,6 +20,7 @@ import { registerDataCredits } from './data/dataCredits.js';
 import { SceneDirector } from './scenes/director.js';
 import { initGevVoiceCommands } from './voice/gevRealtime.js';
 import { MapStackController } from './mapStackController.js';
+import { loadOptionalGoogleTiles } from './googleMapAvailability.js';
 import { initAnnotations } from './annotations/index.js';
 import { initLogoGaze } from './logoGaze.js';
 import { initCockpitCloudEffects } from './cockpitCloudEffects.js';
@@ -80,11 +81,8 @@ async function init() {
     }
 
     // Set Google Maps API key for 3D Tiles
-    const googleApiKey = import.meta.env.GOOGLE_MAPS_API_KEY;
-    if (!googleApiKey) {
-      throw new Error('GOOGLE_MAPS_API_KEY not found. Set it as an environment variable.');
-    }
-    Cesium.GoogleMaps.defaultApiKey = googleApiKey;
+    const googleApiKey = String(import.meta.env.GOOGLE_MAPS_API_KEY || '').trim();
+    if (googleApiKey) Cesium.GoogleMaps.defaultApiKey = googleApiKey;
 
     // Expose API key globally for geocoding in locations.js
     window.__GOOGLE_MAPS_API_KEY__ = googleApiKey;
@@ -153,24 +151,25 @@ async function init() {
     viewer.scene.skyAtmosphere.saturationShift = -0.12;
     viewer.scene.skyAtmosphere.brightnessShift = -0.08;
 
-    loaderStatus.textContent = 'Loading Google 3D Tiles...';
-    let tileset = null;
-    try {
+    loaderStatus.textContent = googleApiKey ? 'Loading Google 3D Tiles...' : 'Loading OpenStreetMap...';
+    const tileset = await loadOptionalGoogleTiles(googleApiKey, async () => {
       // Load Google Photorealistic 3D Tiles
-      tileset = await Cesium.createGooglePhotorealistic3DTileset({
+      const googleTileset = await Cesium.createGooglePhotorealistic3DTileset({
         onlyUsingWithGoogleGeocoder: true,
       });
-      viewer.scene.primitives.add(tileset);
+      viewer.scene.primitives.add(googleTileset);
       // NOTE: Cesium World Terrain intentionally disabled — conflicts with Google 3D Tiles at high zoom.
       // Google Photorealistic 3D Tiles provide their own terrain/elevation.
       viewer.scene.globe.show = false;
-    } catch (tileError) {
+      return googleTileset;
+    }, (tileError) => {
       console.warn('[Init] Google 3D Tiles unavailable, falling back to Cesium globe:', tileError);
       const tileErrorDetail = describeError(tileError);
       loaderStatus.textContent = `Google 3D Tiles unavailable (${tileErrorDetail}). Continuing in fallback mode...`;
       // Keep Cesium globe visible as fallback instead of aborting the app.
       viewer.scene.globe.show = true;
-    }
+    });
+    document.getElementById('google-fallback-status').hidden = !!tileset;
 
     loaderStatus.textContent = 'Initializing systems...';
 

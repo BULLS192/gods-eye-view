@@ -1214,6 +1214,23 @@ body.cockpit-mode #cockpit-cloud-effects.active {
 }
 
 /* Map Source tiles live with Visual Presets in the bottom command tray. */
+#google-fallback-status {
+  position: fixed;
+  top: 82px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  max-width: calc(100vw - 32px);
+  padding: 6px 10px;
+  border: 1px solid #697e8b;
+  border-radius: 4px;
+  background: #101820;
+  color: #e1edf3;
+  font: 12px/1.4 system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+
 .map-source-section {
   display: grid;
   gap: 6px;

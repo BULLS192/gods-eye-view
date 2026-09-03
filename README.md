@@ -69,7 +69,9 @@ The live layers are grounded in public feeds: the airliner crossing your screen 
 
 Requires Node.js 24.14.x or 26.x (enforced by `package.json`).
 
-1. Copy `.env.example` → `.env` and set `GOOGLE_MAPS_API_KEY`.
+1. Copy `.env.example` → `.env`. Leave `GOOGLE_MAPS_API_KEY` blank for a keyless OpenStreetMap globe, or set it to enable Google Photorealistic 3D Tiles.
+
+**Local keyless mode:** the UI displays “Google 3D unavailable — OSM fallback”. Public flight, military flight, satellite, earthquake, weather, and public-data layers remain available subject to their source availability and rate limits. OSM uses the existing keyless terrain provider with a flat-globe fallback. Google buildings/photorealistic imagery and Google geocoding/Places features are unavailable; voice, live AIS, and FIRMS still require their separate optional keys. Traffic without a TomTom key is simulated. No Google billing or key is needed for this mode. Adding a Google key and restarting restores the existing Google 3D startup path.
 2. Install and run:
 
 ```bash
