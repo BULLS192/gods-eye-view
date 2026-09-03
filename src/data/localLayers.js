@@ -1,5 +1,5 @@
 import { createLocalGeoJsonLayer } from './localGeojson.js';
-import { createFirmsHeatmapLayer } from './firmsHeatmap.js';
+import publicIntelLayer from './publicIntel.js';
 import submarineCablesLayer from './telegeographySubmarineCables.js';
 
 // Use Vite's ?url import to properly resolve these assets in dev and build
@@ -7,8 +7,8 @@ import datacentersUrl from './local_data/datacenters/datacenters.geojsonl?url';
 import damsUrl from './local_data/dams/dams.geojsonl?url';
 
 /**
- * Registry of local GeoJSON datasets.
- * These are lazily loaded natively into Cesium when enabled.
+ * Registry of local/bundled datasets plus the fused keyless public-intel layer.
+ * These are lazily activated by the normal DataLayerManager toggle lifecycle.
  */
 const datacenters = createLocalGeoJsonLayer({
   id: 'local-datacenters',
@@ -34,19 +34,16 @@ const dams = createLocalGeoJsonLayer({
   labelGridPx: 132,
 });
 
-// Live NASA FIRMS fires (VIIRS ×3 NRT via the /api/firms proxy). The id keeps
-// the historical `local-` prefix for persistence + voice-tool-enum compat,
-// but the data is NOT bundled anymore — it needs FIRMS_MAP_KEY server-side.
-const fires = createFirmsHeatmapLayer({
-  id: 'local-firms',
-  name: 'FIRMS Active Fires',
-  icon: '▲',
-  source: 'NASA FIRMS · LIVE',
-});
+// `local-firms` is retained as the stable persistence token used by the
+// existing v2 layer-state codec. For the keyless hosted build it now activates
+// four public feeds at once: NWS alerts, NASA EONET natural events, NOAA SWPC
+// aurora probability, and USGS Water latest streamflow. This avoids adding new
+// persistence tokens before the fused view has been field-tested.
+const publicIntel = publicIntelLayer;
 
 export default [
   datacenters,
   dams,
   submarineCablesLayer,
-  fires,
+  publicIntel,
 ];
