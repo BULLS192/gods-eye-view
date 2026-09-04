@@ -60,6 +60,7 @@ export function createHoustonAirQualityLayer() {
     },
 
     async update() {
+      if (lastUpdate && Date.now() - lastUpdate < REFRESH_INTERVAL_MS) return true;
       try {
         const response = await fetch(AIR_URL.toString(), { cache: 'no-store' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
