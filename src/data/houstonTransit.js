@@ -70,6 +70,7 @@ export function createHoustonTransitLayer() {
     },
 
     async update() {
+      if (lastUpdate && Date.now() - lastUpdate < REFRESH_INTERVAL_MS) return true;
       try {
         const payload = await fetchTransit();
         const elements = Array.isArray(payload?.elements) ? payload.elements : [];
