@@ -1,6 +1,7 @@
 import baseConfig from './vite.config.js';
 import { defineConfig } from 'vite';
 import { mobilityProxyPlugin } from './src/server/mobilityProxy.js';
+import { siteAuthPlugin } from './src/server/siteAuth.js';
 
 /**
  * Production preview adapter.
@@ -15,6 +16,9 @@ import { mobilityProxyPlugin } from './src/server/mobilityProxy.js';
  * The hosted fork also appends its small civilian-mobility proxy here. Keeping
  * that code outside the large upstream vite.config.js makes the customization
  * easy to review/rebase while preserving the low-memory preview runtime.
+ *
+ * When SITE_AUTH_PASSWORD is configured, the auth plugin runs first and protects
+ * the entire hosted preview — HTML, static assets, and same-origin API proxies.
  */
 export default defineConfig(async (env) => {
   const resolved = typeof baseConfig === 'function'
@@ -35,10 +39,11 @@ export default defineConfig(async (env) => {
   const upstreamPlugins = Array.isArray(resolved?.plugins)
     ? resolved.plugins.map(adaptPlugin)
     : [];
+  const hostedSiteAuthPlugin = siteAuthPlugin();
   const hostedMobilityPlugin = adaptPlugin(mobilityProxyPlugin());
 
   return {
     ...resolved,
-    plugins: [...upstreamPlugins, hostedMobilityPlugin],
+    plugins: [hostedSiteAuthPlugin, ...upstreamPlugins, hostedMobilityPlugin],
   };
 });
