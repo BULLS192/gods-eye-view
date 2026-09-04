@@ -98,6 +98,32 @@ function ensurePanel() {
   return panel;
 }
 
+function actionButton(label, title, onClick) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.title = title;
+  button.style.cssText = 'border:1px solid rgba(75,220,255,.45);background:rgba(10,34,45,.82);color:#dffaff;padding:5px 7px;font:700 10px "JetBrains Mono",monospace;cursor:pointer;letter-spacing:.04em';
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+async function activateMobilityMode() {
+  const manager = window.__godsEyeView?.dataManager;
+  if (!manager?.setEnabled) return;
+  const targets = ['traffic', 'cctv', 'bikeshare', 'local-firms'];
+  await Promise.allSettled(targets.map((id) => manager.setEnabled(id, true, { origin: 'user' })));
+}
+
+function flyHouston() {
+  const viewer = window.__godsEyeView?.viewer;
+  if (!viewer?.camera) return;
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(-95.3698, 29.7604, 6_800),
+    duration: 1.5,
+  });
+}
+
 function renderPanel(panel, snapshot) {
   if (!panel) return;
   panel.replaceChildren();
@@ -111,6 +137,14 @@ function renderPanel(panel, snapshot) {
   status.style.opacity = '.8';
   header.append(title, status);
   panel.appendChild(header);
+
+  const actions = document.createElement('div');
+  actions.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin:0 0 9px';
+  actions.append(
+    actionButton('🚗 MOBILITY MODE', 'Turn on traffic, cameras, bikeshare and civilian public data', activateMobilityMode),
+    actionButton('⌖ HOUSTON VIEW', 'Fly to Houston at city traffic altitude', flyHouston),
+  );
+  panel.appendChild(actions);
 
   const meta = document.createElement('div');
   meta.style.cssText = 'margin-bottom:9px;opacity:.78';
