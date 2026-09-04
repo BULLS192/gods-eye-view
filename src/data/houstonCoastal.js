@@ -82,15 +82,12 @@ export function createHoustonCoastalLayer() {
       source.entities.removeAll();
       for (const station of stations) {
         const level = station.waterLevelFt;
-        const color = level !== null && level >= 3 ? Cesium.Color.ORANGERED
-          : level !== null && level >= 2 ? Cesium.Color.ORANGE
-            : Cesium.Color.DODGERBLUE;
         source.entities.add({
           id: `noaa-coops:${station.id}`,
           position: Cesium.Cartesian3.fromDegrees(station.lon, station.lat, 20),
           point: {
             pixelSize: 10,
-            color: color.withAlpha(0.9),
+            color: Cesium.Color.DODGERBLUE.withAlpha(0.9),
             outlineColor: Cesium.Color.WHITE.withAlpha(0.8),
             outlineWidth: 1,
             disableDepthTestDistance: 200000,
