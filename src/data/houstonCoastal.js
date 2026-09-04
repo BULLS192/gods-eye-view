@@ -57,6 +57,7 @@ export function createHoustonCoastalLayer() {
     },
 
     async update() {
+      if (lastUpdate && Date.now() - lastUpdate < REFRESH_INTERVAL_MS) return true;
       const settled = await Promise.allSettled(STATIONS.map(async (station) => {
         const response = await fetch(stationUrl(station), { cache: 'no-store' });
         if (!response.ok) throw new Error(`${station.id} HTTP ${response.status}`);
