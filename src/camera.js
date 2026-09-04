@@ -1,8 +1,8 @@
 import * as Cesium from 'cesium';
+import { flyToBrowserLocation } from './currentLocation.js';
 
 /**
  * Camera presets for notable locations.
- * Phase 1 default: fly to Austin, TX on load.
  */
 export const CAMERA_PRESETS = {
   austin: {
@@ -46,11 +46,12 @@ export function flyToPreset(viewer, presetName, duration = 3.0) {
   });
 }
 
-/**
- * Set camera to Austin on load with a cinematic fly-in.
- */
-export function flyToAustin(viewer) {
-  // Start from a high altitude, then fly down
+function loaderMessage(message) {
+  const element = document.querySelector('#loading-screen .loader-status');
+  if (element) element.textContent = message;
+}
+
+function flyToAustinFallback(viewer) {
   viewer.camera.setView({
     destination: Cesium.Cartesian3.fromDegrees(-97.7431, 30.2672, 25000),
     orientation: {
@@ -60,7 +61,6 @@ export function flyToAustin(viewer) {
     },
   });
 
-  // Cinematic fly-in after a brief pause
   setTimeout(() => {
     viewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(-97.7431, 30.2672, 600),
@@ -73,4 +73,37 @@ export function flyToAustin(viewer) {
       easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
     });
   }, 500);
+}
+
+/**
+ * Startup camera behavior for unshared sessions.
+ *
+ * Prefer the device/browser's current position. The browser owns the permission
+ * prompt and the coordinates remain client-side. If permission is denied,
+ * geolocation is unavailable, or the request times out, preserve the original
+ * Austin cinematic view as a safe fallback.
+ *
+ * The legacy function name is retained so existing callers do not change.
+ */
+export async function flyToAustin(viewer) {
+  loaderMessage('Finding your current location...');
+  try {
+    const location = await flyToBrowserLocation(viewer, {
+      timeout: 8_000,
+      maximumAge: 5 * 60_000,
+      enableHighAccuracy: true,
+      duration: 3.5,
+    });
+    const accuracy = Number(location?.accuracy);
+    loaderMessage(Number.isFinite(accuracy)
+      ? `Current location found · accuracy ±${Math.round(accuracy)} m`
+      : 'Current location found');
+    window.dispatchEvent(new CustomEvent('gev:current-location', { detail: location }));
+    return location;
+  } catch (error) {
+    console.warn('[Camera] Current location unavailable; using Austin fallback:', error);
+    loaderMessage('Location unavailable — using Austin fallback...');
+    flyToAustinFallback(viewer);
+    return null;
+  }
 }
