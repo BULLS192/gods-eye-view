@@ -5,6 +5,7 @@ import houstonTransitLayer from './houstonTransit.js';
 import houstonAirQualityLayer from './houstonAirQuality.js';
 import houstonCoastalLayer from './houstonCoastal.js';
 import { createFirmsHeatmapLayer } from './firmsHeatmap.js';
+import { registerDynamicCredit } from './dataCredits.js';
 
 const firmsLayer = createFirmsHeatmapLayer({
   id: 'public-intel-firms',
@@ -12,6 +13,15 @@ const firmsLayer = createFirmsHeatmapLayer({
   icon: '▲',
   source: 'NASA FIRMS · LIVE',
 });
+
+const CIVILIAN_MOBILITY_CREDIT = {
+  key: 'civilian-mobility-v1',
+  html:
+    'Houston mobility: Houston TranStar · NOAA/NWS MRMS radar &amp; NOAA CO-OPS water levels · ' +
+    'Air quality by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> ' +
+    'using Copernicus Atmosphere Monitoring Service (CAMS) data · ' +
+    '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>',
+};
 
 function syncMobilityPanel() {
   houstonMobilityFeed.setCompanionStats?.({
@@ -38,6 +48,7 @@ const publicIntelWithFirms = {
   updateInterval: 120_000,
 
   async init(viewer) {
+    registerDynamicCredit(viewer, CIVILIAN_MOBILITY_CREDIT);
     publicIntelLayer.init(viewer);
     houstonMobilityFeed.init(viewer);
     noaaRadarFeed.init(viewer);
