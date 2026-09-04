@@ -79,6 +79,7 @@ export function createNoaaRadarFeed() {
         error,
         source: 'NOAA/NWS MRMS radar',
         mode: 'live',
+        truthStatus: 'LIVE',
       };
     },
   };
