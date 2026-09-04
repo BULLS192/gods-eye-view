@@ -1,5 +1,6 @@
 import baseConfig from './vite.config.js';
 import { defineConfig } from 'vite';
+import { mobilityProxyPlugin } from './src/server/mobilityProxy.js';
 
 /**
  * Production preview adapter.
@@ -11,8 +12,9 @@ import { defineConfig } from 'vite';
  * configureServer -> configurePreviewServer only when a plugin has not already
  * provided a preview-specific implementation.
  *
- * This keeps the built frontend + Vite preview runtime while preserving the
- * existing proxy/caching/rate-limit implementations without duplicating them.
+ * The hosted fork also appends its small civilian-mobility proxy here. Keeping
+ * that code outside the large upstream vite.config.js makes the customization
+ * easy to review/rebase while preserving the low-memory preview runtime.
  */
 export default defineConfig(async (env) => {
   const resolved = typeof baseConfig === 'function'
@@ -30,12 +32,13 @@ export default defineConfig(async (env) => {
     };
   };
 
-  const plugins = Array.isArray(resolved?.plugins)
+  const upstreamPlugins = Array.isArray(resolved?.plugins)
     ? resolved.plugins.map(adaptPlugin)
-    : resolved?.plugins;
+    : [];
+  const hostedMobilityPlugin = adaptPlugin(mobilityProxyPlugin());
 
   return {
     ...resolved,
-    plugins,
+    plugins: [...upstreamPlugins, hostedMobilityPlugin],
   };
 });
